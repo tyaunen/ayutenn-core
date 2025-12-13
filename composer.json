@@ -1,0 +1,17 @@
+{
+    "name": "tyaunen/ayutenn-core",
+    "description": "PHP自作フレームワーク",
+    "type": "library",
+    "license": "CC-BY-1.0",
+    "require-dev": {
+        "phpunit/phpunit": "10"
+    },
+    "require": {
+        "php": ">=8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "ayutenn\\core\\": "./src"
+        }
+    }
+}
