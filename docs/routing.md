@@ -170,11 +170,11 @@ class AuthMiddleware extends Middleware
 
 ```php
 // アプリケーション設定
-Config::setAppSetting('CONTROLLER_DIR', '/controllers');
-Config::setAppSetting('VIEW_DIR', '/views');
-Config::setAppSetting('API_DIR', '/api');
-Config::setAppSetting('PATH_ROOT', '/myapp');
-Config::setAppSetting('404_VIEW_FILE', '/errors/404.php');
+Config::get('CONTROLLER_DIR', '/controllers');
+Config::get('VIEW_DIR', '/views');
+Config::get('API_DIR', '/api');
+Config::get('PATH_ROOT', '/myapp');
+Config::get('404_VIEW_FILE', '/errors/404.php');
 ```
 
 ---

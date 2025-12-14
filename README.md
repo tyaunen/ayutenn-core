@@ -53,6 +53,7 @@ composer require tyaunen/ayutenn-core:dev-main
 
 | 機能 | 説明 | ドキュメント |
 |------|------|--------------|
+| **FrameworkPaths** | パス設定を一元管理（bootstrap用） | [docs/framework_paths.md](docs/framework_paths.md) |
 | **Config** | JSON から設定を読み込む静的クラス | [docs/config.md](docs/config.md) |
 | **Routing** | URL ルーティング、ミドルウェア、ルートグループ | [docs/routing.md](docs/routing.md) |
 | **Validation** | 宣言的なバリデーションとキャスト | [docs/validation.md](docs/validation.md) |
@@ -63,15 +64,23 @@ composer require tyaunen/ayutenn-core:dev-main
 
 ## クイックスタート
 
-### 1. 設定の読み込み
+### 1. Bootstrap（パス設定）
 
 ```php
+use ayutenn\core\FrameworkPaths;
 use ayutenn\core\config\Config;
 
-Config::loadFromJson(__DIR__ . '/config/app.json');
-Config::loadFromJson(__DIR__ . '/config/env.json');
+// フレームワークが使用するパスを設定
+FrameworkPaths::init([
+    'controllerDir' => __DIR__ . '/controllers',
+    'viewDir' => __DIR__ . '/views',
+    'apiDir' => __DIR__ . '/api',
+    'pathRoot' => '/myapp',
+    'validationRulesDir' => __DIR__ . '/rules',
+]);
 
-$appName = Config::get('app_name');
+// 環境依存設定（DB接続など）
+Config::loadFromJson(__DIR__ . '/config/env.json');
 ```
 
 ### 2. ルーティング

@@ -1,7 +1,7 @@
 <?php
 namespace ayutenn\core\requests;
 
-use ayutenn\core\config\Config;
+use ayutenn\core\FrameworkPaths;
 use ayutenn\core\session\FlashMessage;
 use ayutenn\core\utils\Redirect;
 use ayutenn\core\validation\Validator;
@@ -90,7 +90,7 @@ abstract class Controller
      */
     protected function redirect(string $path, array $parameter = []): void
     {
-        $url_root = (empty($_SERVER['HTTPS']) ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'] . Config::get('PATH_ROOT');
+        $url_root = (empty($_SERVER['HTTPS']) ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'] . FrameworkPaths::getPathRoot();
         $url = "{$url_root}{$path}";
 
         // リダイレクトヘッダを送信
@@ -123,7 +123,7 @@ abstract class Controller
 
         // リクエストパラメタのバリデート
         try {
-            $rulesDir = Config::get('VALIDATION_RULES_DIR');
+            $rulesDir = FrameworkPaths::getValidationRulesDir();
             $validator = new Validator($this->RequestParameterFormat, $rulesDir);
             $result = $validator->validate($request_parameters);
         } catch (\Exception $e) {

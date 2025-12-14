@@ -2,7 +2,7 @@
 namespace ayutenn\core\requests;
 
 use Exception;
-use ayutenn\core\config\Config;
+use ayutenn\core\FrameworkPaths;
 use ayutenn\core\utils\Redirect;
 use ayutenn\core\validation\Validator;
 
@@ -40,7 +40,7 @@ abstract class Api
 
         // パラメータのバリデート
         try {
-            $rulesDir = Config::get('VALIDATION_RULES_DIR');
+            $rulesDir = FrameworkPaths::getValidationRulesDir();
             $validator = new Validator($this->RequestParameterFormat, $rulesDir);
             $result = $validator->validate($request_parameters);
         } catch (Exception $e) {

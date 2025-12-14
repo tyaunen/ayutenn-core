@@ -2,7 +2,7 @@
 
 namespace tests\unit\requests;
 
-use ayutenn\core\config\Config;
+use ayutenn\core\FrameworkPaths;
 use ayutenn\core\requests\Controller;
 use ayutenn\core\session\FlashMessage;
 use ayutenn\core\utils\Redirect;
@@ -84,9 +84,14 @@ class ControllerTest extends TestCase
     {
         Redirect::$isTest = true;
         Redirect::$lastRedirectUrl = '';
-        Config::reset();
-        Config::set('VALIDATION_RULES_DIR', __DIR__ . '/rules');
-        Config::set('PATH_ROOT', '/app');
+        FrameworkPaths::reset();
+        FrameworkPaths::init([
+            'controllerDir' => __DIR__ . '/controllers',
+            'viewDir' => __DIR__ . '/views',
+            'apiDir' => __DIR__ . '/api',
+            'pathRoot' => '/app',
+            'validationRulesDir' => __DIR__ . '/rules',
+        ]);
 
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_SERVER['HTTP_HOST'] = 'localhost';
@@ -100,7 +105,7 @@ class ControllerTest extends TestCase
     {
         Redirect::$isTest = false;
         Redirect::$lastRedirectUrl = '';
-        Config::reset();
+        FrameworkPaths::reset();
 
         $_SERVER['REQUEST_METHOD'] = 'GET';
         unset($_SERVER['HTTP_HOST']);

@@ -1,7 +1,7 @@
 <?php
 namespace ayutenn\core\routing;
 
-use ayutenn\core\config\Config;
+use ayutenn\core\FrameworkPaths;
 use ayutenn\core\routing\Middleware;
 use ayutenn\core\utils\Redirect;
 use ayutenn\core\requests\Controller;
@@ -132,9 +132,8 @@ class Route
      */
     private function handleController(string $controller_path): void
     {
-        $document_root = $_SERVER['DOCUMENT_ROOT'];
-        $controller_dir = Config::get('CONTROLLER_DIR');
-        $file_path = $document_root . $this->joinPath($controller_dir, $controller_path) . '.php';
+        $controller_dir = FrameworkPaths::getControllerDir();
+        $file_path = $controller_dir . $this->joinPath($controller_path) . '.php';
 
         if (!file_exists($file_path)) {
             throw new Exception("エラー: コントローラーファイルが見つかりません。（{$file_path}）");
@@ -166,9 +165,8 @@ class Route
      */
     private function handleView(string $view_name): void
     {
-        $document_root = $_SERVER['DOCUMENT_ROOT'];
-        $view_dir = Config::get('VIEW_DIR');
-        $file_path = $document_root . $this->joinPath($view_dir, $view_name) . '.php';
+        $view_dir = FrameworkPaths::getViewDir();
+        $file_path = $view_dir . $this->joinPath($view_name) . '.php';
 
         if (!file_exists($file_path)) {
             throw new Exception("エラー: ビューファイルが見つかりません。（{$file_path}）");
@@ -186,9 +184,8 @@ class Route
      */
     private function handleApi(string $api_path): void
     {
-        $document_root = $_SERVER['DOCUMENT_ROOT'];
-        $api_dir = Config::get('API_DIR');
-        $file_path = $document_root . $this->joinPath($api_dir, $api_path) . '.php';
+        $api_dir = FrameworkPaths::getApiDir();
+        $file_path = $api_dir . $this->joinPath($api_path) . '.php';
 
         if (!file_exists($file_path)) {
             throw new Exception("エラー: APIファイルが見つかりません。（{$file_path}）");
@@ -222,7 +219,7 @@ class Route
     {
         // リダイレクトには302 Foundステータスを使用
         http_response_code(302);
-        $top_dir = (empty($_SERVER['HTTPS']) ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'] . Config::get('PATH_ROOT');
+        $top_dir = (empty($_SERVER['HTTPS']) ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'] . FrameworkPaths::getPathRoot();
         Redirect::redirect($top_dir . $redirect_path);
     }
 
@@ -231,12 +228,15 @@ class Route
      */
     public static function showNotFoundPage(): void
     {
-        $document_root = $_SERVER['DOCUMENT_ROOT'];
-        $view_dir = Config::get('VIEW_DIR');
-        $view_name = Config::get('404_VIEW_FILE');
+        $view_dir = FrameworkPaths::getViewDir();
+        $view_name = FrameworkPaths::getNotFoundView();
 
-        // joinPathは静的メソッドではないので、ここでは直接パス結合
-        $file_path = $document_root . '/' . trim($view_dir, '/') . '/' . trim($view_name, '/');
+        if ($view_name === null) {
+            throw new Exception("エラー: 404ビューファイルが設定されていません。FrameworkPaths::init() で notFoundView を設定してください。");
+        }
+
+        // 絶対パスを直接結合
+        $file_path = rtrim($view_dir, '/\\') . '/' . ltrim($view_name, '/\\');
 
         if (!file_exists($file_path)) {
             throw new Exception("エラー: 404ビューファイルが見つかりません。（{$file_path}）");

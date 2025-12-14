@@ -2,7 +2,7 @@
 
 namespace tests\unit\requests;
 
-use ayutenn\core\config\Config;
+use ayutenn\core\FrameworkPaths;
 use ayutenn\core\requests\Api;
 use ayutenn\core\utils\Redirect;
 use PHPUnit\Framework\TestCase;
@@ -62,8 +62,14 @@ class ApiTest extends TestCase
     {
         Redirect::$isTest = true;
         Redirect::$lastApiResponse = [];
-        Config::reset();
-        Config::set('VALIDATION_RULES_DIR', __DIR__ . '/rules');
+        FrameworkPaths::reset();
+        FrameworkPaths::init([
+            'controllerDir' => __DIR__ . '/controllers',
+            'viewDir' => __DIR__ . '/views',
+            'apiDir' => __DIR__ . '/api',
+            'pathRoot' => '/app',
+            'validationRulesDir' => __DIR__ . '/rules',
+        ]);
 
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_GET = [];
@@ -74,7 +80,7 @@ class ApiTest extends TestCase
     {
         Redirect::$isTest = false;
         Redirect::$lastApiResponse = [];
-        Config::reset();
+        FrameworkPaths::reset();
 
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_GET = [];
