@@ -1,6 +1,7 @@
 {
     "name": "tyaunen/ayutenn-core",
-    "description": "PHP自作フレームワーク",
+    "description": "ayutennは、御茶請稔によるオレオレフレームワークです。第三者からの利用は想定していません。",
+    "version": "1.0.0",
     "type": "library",
     "license": "CC-BY-1.0",
     "require-dev": {
@@ -13,5 +14,8 @@
         "psr-4": {
             "ayutenn\\core\\": "./src"
         }
-    }
+    },
+    "bin": [
+        "bin/migrate.php"
+    ]
 }

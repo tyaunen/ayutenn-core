@@ -42,6 +42,21 @@
 
 ### 2. マイグレーションを生成
 
+#### CLI（推奨）
+
+```bash
+# 設定ファイルを使用
+php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations
+
+# プレビュー（ファイル出力なし）
+php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations --preview
+
+# DSN直接指定
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --tables=./tables --output=./migrations
+```
+
+#### PHPコードから
+
 ```php
 use ayutenn\core\migration\MigrationManager;
 use ayutenn\core\database\DbConnector;
@@ -290,6 +305,52 @@ mysql -u user -p database < migrations/20241214_101154_migration.sql
 | `SchemaDiffer` | 期待される定義と実際の構造の差分を検出 |
 | `DDLGenerator` | 差分からDDL文を生成 |
 | `MigrationManager` | 全体の処理フローを制御 |
+
+---
+
+## CLI Reference
+
+コマンドラインからマイグレーションを実行できます。
+
+### 使用方法
+
+```bash
+# Composerパッケージとして利用する場合
+php vendor/bin/migrate.php [options]
+
+# フレームワーク単体で利用する場合
+php bin/migrate.php [options]
+```
+
+### オプション
+
+| オプション | 説明 |
+|---|---|
+| `--config=<path>` | 設定ファイルパス（`PDO_DSN`, `PDO_USERNAME`, `PDO_PASSWORD`を含む） |
+| `--dsn=<dsn>` | PDO DSN（`--config`がない場合は必須） |
+| `--user=<user>` | DBユーザー名（`--config`がない場合は必須） |
+| `--password=<password>` | DBパスワード（省略時: 空文字） |
+| `--tables=<dir>` | テーブル定義JSONディレクトリ（必須） |
+| `--output=<dir>` | SQL出力ディレクトリ（必須） |
+| `--preview` | プレビューのみ（ファイル出力しない） |
+| `--drop-unknown` | 定義にないテーブルを削除対象に含める |
+| `--help` | ヘルプを表示 |
+
+### 使用例
+
+```bash
+# 設定ファイルを使用（推奨）
+php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations
+
+# プレビューのみ
+php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations --preview
+
+# DSN直接指定
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --tables=./tables --output=./migrations
+
+# 定義にないテーブルを削除対象に含める
+php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations --drop-unknown
+```
 
 ---
 
