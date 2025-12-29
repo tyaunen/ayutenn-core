@@ -154,6 +154,40 @@ src/
 └── validation/   # バリデーション
 ```
 
+## AIエージェント向けワークフロー
+
+このフレームワークには、AIエージェントがフレームワークの機能を正しく使用するためのワークフローファイルが含まれています。
+
+### 親プロジェクトでの利用
+
+Composerでインストール後、ワークフローファイルを親プロジェクトにコピーしてください：
+
+**PowerShell（Windows）:**
+```powershell
+Copy-Item -Path "vendor/tyaunen/ayutenn-core/.agent/workflows/*" -Destination ".agent/workflows/" -Recurse -Force
+```
+
+**Bash（Linux/Mac）:**
+```bash
+mkdir -p .agent/workflows
+cp -r vendor/tyaunen/ayutenn-core/.agent/workflows/* .agent/workflows/
+```
+
+### 利用可能なワークフロー
+
+| コマンド | 説明 |
+|---------|------|
+| `/setup-project` | プロジェクトの初期設定（Bootstrap）を行う |
+| `/create-table` | データベーステーブルを宣言・作成する |
+| `/create-route` | URLルーティングを定義する |
+| `/create-validation` | バリデーションルールを定義する |
+| `/create-controller` | Webフォーム処理用コントローラーを作成する |
+| `/create-api` | JSON APIエンドポイントを作成する |
+| `/add-flash-message` | フラッシュメッセージを追加する |
+| `/add-csrf-protection` | CSRF保護を追加する |
+| `/add-file-upload` | ファイルアップロード機能を追加する |
+| `/add-logging` | ログ出力機能を追加する |
+
 ## テスト
 
 ```bash
