@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace ayutenn\core\utils;
 
 use ayutenn\core\config\Config;

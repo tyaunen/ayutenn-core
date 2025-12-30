@@ -164,13 +164,13 @@ Composerでインストール後、ワークフローファイルを親プロジ
 
 **PowerShell（Windows）:**
 ```powershell
-Copy-Item -Path "vendor/tyaunen/ayutenn-core/.agent/workflows/*" -Destination ".agent/workflows/" -Recurse -Force
+Copy-Item -Path "vendor/tyaunen/ayutenn-core/agent-workflows/*" -Destination ".agent/workflows/" -Recurse -Force
 ```
 
 **Bash（Linux/Mac）:**
 ```bash
 mkdir -p .agent/workflows
-cp -r vendor/tyaunen/ayutenn-core/.agent/workflows/* .agent/workflows/
+cp -r vendor/tyaunen/ayutenn-core/agent-workflows/* .agent/workflows/
 ```
 
 ### 利用可能なワークフロー

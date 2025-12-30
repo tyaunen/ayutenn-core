@@ -93,8 +93,8 @@ PHP;
     {
         $routeContent = <<<'PHP'
 <?php
-// 配列を返さない
-echo "test";
+// 配列を返さない（意図的にnullを返す）
+return null;
 PHP;
         $this->createRouteFile('invalid.php', $routeContent);
 

@@ -5,7 +5,7 @@
     "type": "library",
     "license": "CC-BY-1.0",
     "require-dev": {
-        "phpunit/phpunit": "10"
+        "phpunit/phpunit": "^11"
     },
     "require": {
         "php": ">=8.0"
@@ -14,6 +14,14 @@
         "psr-4": {
             "ayutenn\\core\\": "./src"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "tests\\": "./tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
     },
     "bin": [
         "bin/migrate.php"

@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace ayutenn\core\utils;
 
 use ayutenn\core\config\Config;
@@ -34,6 +36,18 @@ class Logger
     /** @var int 出力する最低ログレベル */
     private int $minLevel = 100; // DEBUGレベル相当
 
+    /** @var array<int, string> ログレベル名のマッピング */
+    private array $levelNames = [
+        self::DEBUG     => 'DEBUG',
+        self::INFO      => 'INFO',
+        self::NOTICE    => 'NOTICE',
+        self::WARNING   => 'WARNING',
+        self::ERROR     => 'ERROR',
+        self::CRITICAL  => 'CRITICAL',
+        self::ALERT     => 'ALERT',
+        self::EMERGENCY => 'EMERGENCY',
+    ];
+
     // ログレベル定数（PSR-3準拠）
     public const DEBUG     = 100;
     public const INFO      = 200;
@@ -43,22 +57,6 @@ class Logger
     public const CRITICAL  = 500;
     public const ALERT     = 550;
     public const EMERGENCY = 600;
-
-    /**
-     * ログレベル名マッピング
-     *
-     * @var array<int, string>
-     */
-    private array $levelNames = [
-        self::DEBUG     => 'DEBUG',
-        self::INFO      => 'INFO',
-        self::NOTICE    => 'NOTICE',
-        self::WARNING   => 'WARNING',
-        self::ERROR     => 'ERROR',
-        self::CRITICAL  => 'CRITICAL',
-        self::ALERT     => 'ALERT',
-        self::EMERGENCY => 'EMERGENCY'
-    ];
 
     /**
      *

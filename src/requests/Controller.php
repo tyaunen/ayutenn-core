@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace ayutenn\core\requests;
 
 use ayutenn\core\FrameworkPaths;
