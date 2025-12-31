@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Config;
 
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ayutenn\core\config\Config;
 
@@ -18,6 +19,10 @@ class ConfigTest extends TestCase
         $this->tempDir = sys_get_temp_dir() . '/config_test_' . uniqid();
         mkdir($this->tempDir, 0777, true);
     }
+
+    // ... (snip) ...
+
+
 
     protected function tearDown(): void
     {
@@ -82,9 +87,7 @@ class ConfigTest extends TestCase
         Config::loadFromJson($path);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function 複数のJSONファイルを読み込むとマージされる(): void
     {
         $appPath = $this->createJsonFile('app.json', [
@@ -107,9 +110,7 @@ class ConfigTest extends TestCase
         $this->assertSame('localhost', Config::get('db_host'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function キーが重複している場合は例外が発生する(): void
     {
         $path1 = $this->createJsonFile('config1.json', ['key' => 'value1']);
@@ -127,9 +128,7 @@ class ConfigTest extends TestCase
     // load テスト
     // ========================================
 
-    /**
-     * @test
-     */
+    #[Test]
     public function load_配列で指定した複数のJSONファイルを順に読み込める(): void
     {
         $path1 = $this->createJsonFile('config1.json', ['key1' => 'value1']);
@@ -145,9 +144,7 @@ class ConfigTest extends TestCase
     // loadFromDirectory テスト
     // ========================================
 
-    /**
-     * @test
-     */
+    #[Test]
     public function loadFromDirectory_ディレクトリ内のJSONファイルを読み込める(): void
     {
         // 1.json と 2.json でキーが重複しないように修正
@@ -163,9 +160,7 @@ class ConfigTest extends TestCase
         $this->assertSame(1, Config::get('val'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function loadFromDirectory_キー重複がある場合は例外が発生する(): void
     {
         // 名前順で先に読まれる
@@ -179,9 +174,7 @@ class ConfigTest extends TestCase
         Config::loadFromDirectory($this->tempDir);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function loadFromDirectory_存在しないディレクトリを指定すると例外が発生する(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -190,9 +183,7 @@ class ConfigTest extends TestCase
         Config::loadFromDirectory('/nonexistent/dir');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function loadFromDirectory_空のディレクトリでもエラーにならない(): void
     {
         $emptyDir = $this->tempDir . '/empty';
