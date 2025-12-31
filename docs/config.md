@@ -46,16 +46,41 @@ $dbHost = Config::get('db_host');
 
 ### `loadFromJson(string $path): void`
 
-JSONファイルから設定を読み込む。複数回呼び出した場合、後から読み込んだ設定が既存設定に上書きマージされる。
+JSONファイルから設定を読み込む。
+**仕様:** 既に読み込み済みの設定とキーが重複している場合、`RuntimeException` をスローする。
 
 ```php
 Config::loadFromJson('/path/to/app.json');
-Config::loadFromJson('/path/to/env.json'); // app.jsonの設定に上書きマージ
+// app.json とキーが重複している場合、例外が発生する
+Config::loadFromJson('/path/to/env.json');
 ```
 
 **例外:**
 - `InvalidArgumentException`: ファイルが存在しない場合
-- `RuntimeException`: JSONのパースに失敗した場合
+- `RuntimeException`: JSONのパースに失敗した場合、またはキーが重複している場合
+
+### `load(array $paths): void`
+
+複数のJSONファイルから設定を読み込む。指定されたパスの順に設定を追加する。
+**仕様:** こちらも同様に、ファイル間でキーの重複がある場合は `RuntimeException` をスローする。
+
+```php
+Config::load([
+    '/path/to/base.json',
+    '/path/to/other.json', // base.jsonとキーが重複するとエラー
+]);
+```
+
+### `loadFromDirectory(string $directory): void`
+
+ディレクトリ内の全てのJSONファイルから設定を読み込む。ファイル名の昇順で読み込まれるため、読み込み順序はファイル名（`01_base.json`, `99_override.json` など）で制御する。
+
+```php
+Config::loadFromDirectory('/path/to/config/dir');
+```
+
+**例外:**
+- `InvalidArgumentException`: ディレクトリが存在しない場合
 
 ### `get(string $key): mixed`
 

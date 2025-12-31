@@ -21,11 +21,11 @@ class Config
     /**
      * JSONファイルから設定を読み込む
      *
-     * 既存の設定に対して上書きマージを行う。
+     * 既存の設定とキーが重複している場合は例外をスローする。
      *
      * @param string $path JSONファイルのパス
      * @throws \InvalidArgumentException ファイルが存在しない場合
-     * @throws \RuntimeException JSONのパースに失敗した場合
+     * @throws \RuntimeException JSONのパースに失敗した場合、またはキーが重複している場合
      */
     public static function loadFromJson(string $path): void
     {
@@ -40,7 +40,53 @@ class Config
             throw new \RuntimeException("Failed to parse JSON: " . json_last_error_msg());
         }
 
-        self::$config = array_merge(self::$config, $data);
+        foreach ($data as $key => $value) {
+            if (array_key_exists($key, self::$config)) {
+                throw new \RuntimeException("Config key duplicate error: {$key} is already defined.");
+            }
+            self::$config[$key] = $value;
+        }
+    }
+
+    /**
+     * 複数のJSONファイルから設定を読み込む
+     *
+     * 指定されたパスの順に設定を読み込み、マージする。
+     *
+     * @param array $paths JSONファイルパスの配列
+     */
+    public static function load(array $paths): void
+    {
+        foreach ($paths as $path) {
+            self::loadFromJson($path);
+        }
+    }
+
+    /**
+     * ディレクトリ内の全てのJSONファイルから設定を読み込む
+     *
+     * ファイル名の昇順（ファイルシステム依存）で読み込まれる。
+     *
+     * @param string $directory ディレクトリパス
+     * @throws \InvalidArgumentException ディレクトリが存在しない場合
+     */
+    public static function loadFromDirectory(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            throw new \InvalidArgumentException("Directory not found: {$directory}");
+        }
+
+        // 末尾のセパレータを正規化してglobする
+        $directory = rtrim($directory, '/\\');
+        $files = glob($directory . '/*.json');
+
+        if ($files === false) {
+             return; // エラーまたは空の場合は何もしない
+        }
+
+        foreach ($files as $file) {
+            self::loadFromJson($file);
+        }
     }
 
     /**
