@@ -55,27 +55,71 @@ composer require tyaunen/ayutenn-core:dev-main
 |------|------|--------------|
 | **FrameworkPaths** | パス設定を一元管理（bootstrap用） | [docs/framework_paths.md](docs/framework_paths.md) |
 | **Config** | JSON から設定を読み込む静的クラス | [docs/config.md](docs/config.md) |
+| **Database** | DB接続管理、クエリ実行抽象化、結果ラッピング | [docs/database.md](docs/database.md) |
 | **Routing** | URL ルーティング、ミドルウェア、ルートグループ | [docs/routing.md](docs/routing.md) |
 | **Validation** | 宣言的なバリデーションとキャスト | [docs/validation.md](docs/validation.md) |
 | **Requests** | API / Controller の基底クラス | [docs/requests.md](docs/requests.md) |
-| **Migration** | 宣言的マイグレーション（JSON → SQL） | [docs/migration.md](docs/migration.md) |
+| **Migration** | 宣言的マイグレーション（JSON → SQL）+ CLI | [docs/migration.md](docs/migration.md) |
 | **Session** | フラッシュメッセージ管理 | [docs/session.md](docs/session.md) |
 | **Utils** | CSRF, ファイル操作, ロガー, UUID 等 | [docs/utils.md](docs/utils.md) |
 
+## CLIツール
+
+### マイグレーション
+
+コマンドラインからマイグレーションを実行できます：
+
+```bash
+# 設定ファイルを使用
+php vendor/bin/migrate.php --config=path/to/env.json --tables=path/to/tables/
+
+# プレビューモード（SQLを表示するだけで実行しない）
+php vendor/bin/migrate.php --config=path/to/env.json --tables=path/to/tables/ --preview
+
+# 不要なテーブルを削除
+php vendor/bin/migrate.php --config=path/to/env.json --tables=path/to/tables/ --drop-unknown
+```
+
+詳細は [docs/migration.md](docs/migration.md) を参照してください。
 
 ## ディレクトリ構成
 
 ```
-src/
-├── config/       # 設定管理
-├── database/     # データベース接続
-├── migration/    # マイグレーションツール
-├── requests/     # API / Controller 基底クラス
-├── routing/      # ルーティング
-├── session/      # セッション管理
-├── utils/        # ユーティリティ
-└── validation/   # バリデーション
+├── agent-workflows/   # AIエージェント向けワークフロー（親プロジェクトにコピーして使用）
+├── bin/               # CLIツール
+│   └── migrate.php    # マイグレーションCLI
+├── docs/              # ドキュメント
+├── src/
+│   ├── FrameworkPaths.php  # パス設定クラス
+│   ├── config/             # 設定管理
+│   ├── database/           # DB接続・クエリ実行
+│   ├── migration/          # マイグレーションツール
+│   ├── requests/           # API / Controller 基底クラス
+│   ├── routing/            # ルーティング
+│   ├── session/            # セッション管理
+│   ├── utils/              # ユーティリティ
+│   └── validation/         # バリデーション
+├── tests/             # テストコード
+├── workflows/         # フレームワーク開発用ワークフロー
+├── AGENT.md           # AI開発ガイドライン
+└── README.md
 ```
+
+## 開発者向け情報
+
+### AGENT.md
+
+AIエージェントがこのプロジェクトで開発する際のガイドラインは [AGENT.md](AGENT.md) を参照してください。
+
+タスク遂行フローとして、以下の順序が推奨されています：
+
+1. ドキュメント確認（`/docs` の参照）
+2. 不明点の確認
+3. 実装提案
+4. タスクの遂行
+5. テストコードの作成と実行
+6. セルフレビュー
+7. ドキュメントの更新
 
 ## AIエージェント向けワークフロー
 
