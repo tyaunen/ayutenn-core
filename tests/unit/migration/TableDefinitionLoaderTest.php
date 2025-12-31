@@ -8,11 +8,13 @@ use PHPUnit\Framework\TestCase;
 class TableDefinitionLoaderTest extends TestCase
 {
     private string $tempDir;
+    private string $rulesDir;
 
     protected function setUp(): void
     {
         $this->tempDir = sys_get_temp_dir() . '/migration_test_' . uniqid();
         mkdir($this->tempDir);
+        $this->rulesDir = __DIR__ . '/../../fixtures/rules';
     }
 
     protected function tearDown(): void
@@ -129,5 +131,134 @@ class TableDefinitionLoaderTest extends TestCase
 
         $this->assertCount(1, $tables);
         $this->assertArrayHasKey('users', $tables);
+    }
+
+    // ========================================
+    // format機能のテスト
+    // ========================================
+
+    public function test_formatキーを使用してルールからカラム定義を解決できる(): void
+    {
+        $jsonPath = $this->tempDir . '/users.json';
+        file_put_contents($jsonPath, json_encode([
+            'name' => 'users',
+            'columns' => [
+                'user_id' => [
+                    'format' => 'user_id',
+                    'nullable' => false,
+                    'comment' => 'ユーザーID',
+                ],
+                'user_name' => [
+                    'format' => 'username',
+                    'nullable' => false,
+                    'comment' => 'ユーザー名',
+                ],
+            ],
+            'primaryKey' => ['user_id'],
+        ]));
+
+        $loader = new TableDefinitionLoader($this->rulesDir);
+        $table = $loader->load($jsonPath);
+
+        $this->assertEquals('users', $table->getName());
+
+        // user_id: dbセクションからchar(16)
+        $userIdColumn = $table->getColumn('user_id');
+        $this->assertNotNull($userIdColumn);
+        $this->assertEquals('char', $userIdColumn->getType());
+        $this->assertEquals(16, $userIdColumn->getLength());
+        $this->assertFalse($userIdColumn->isNullable());
+        $this->assertEquals('ユーザーID', $userIdColumn->getComment());
+
+        // user_name: string + max_lengthからvarchar(100)
+        $userNameColumn = $table->getColumn('user_name');
+        $this->assertNotNull($userNameColumn);
+        $this->assertEquals('varchar', $userNameColumn->getType());
+        $this->assertEquals(100, $userNameColumn->getLength());
+        $this->assertFalse($userNameColumn->isNullable());
+        $this->assertEquals('ユーザー名', $userNameColumn->getComment());
+    }
+
+    public function test_ルールディレクトリ未指定でformatキーを使用すると例外が発生する(): void
+    {
+        $jsonPath = $this->tempDir . '/users.json';
+        file_put_contents($jsonPath, json_encode([
+            'name' => 'users',
+            'columns' => [
+                'user_name' => [
+                    'format' => 'username',
+                ],
+            ],
+        ]));
+
+        $loader = new TableDefinitionLoader();
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('formatキーを使用するにはルールディレクトリの指定が必要です');
+
+        $loader->load($jsonPath);
+    }
+
+    public function test_存在しないルールファイルを指定すると例外が発生する(): void
+    {
+        $jsonPath = $this->tempDir . '/users.json';
+        file_put_contents($jsonPath, json_encode([
+            'name' => 'users',
+            'columns' => [
+                'user_name' => [
+                    'format' => 'nonexistent_rule',
+                ],
+            ],
+        ]));
+
+        $loader = new TableDefinitionLoader($this->rulesDir);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('ルールファイルが見つかりません');
+
+        $loader->load($jsonPath);
+    }
+
+    public function test_formatと従来の定義を混在させることができる(): void
+    {
+        $jsonPath = $this->tempDir . '/users.json';
+        file_put_contents($jsonPath, json_encode([
+            'name' => 'users',
+            'columns' => [
+                'id' => [
+                    'type' => 'int',
+                    'unsigned' => true,
+                    'autoIncrement' => true,
+                ],
+                'user_name' => [
+                    'format' => 'username',
+                    'nullable' => false,
+                ],
+                'created_at' => [
+                    'type' => 'datetime',
+                    'default' => 'CURRENT_TIMESTAMP',
+                ],
+            ],
+            'primaryKey' => ['id'],
+        ]));
+
+        $loader = new TableDefinitionLoader($this->rulesDir);
+        $table = $loader->load($jsonPath);
+
+        $this->assertCount(3, $table->getColumns());
+
+        // 従来の定義
+        $idColumn = $table->getColumn('id');
+        $this->assertEquals('int', $idColumn->getType());
+        $this->assertTrue($idColumn->isAutoIncrement());
+
+        // format定義
+        $userNameColumn = $table->getColumn('user_name');
+        $this->assertEquals('varchar', $userNameColumn->getType());
+        $this->assertEquals(100, $userNameColumn->getLength());
+
+        // 従来の定義
+        $createdAtColumn = $table->getColumn('created_at');
+        $this->assertEquals('datetime', $createdAtColumn->getType());
     }
 }

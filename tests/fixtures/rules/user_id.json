@@ -1,0 +1,10 @@
+{
+    "type": "string",
+    "min_length": 16,
+    "max_length": 16,
+    "conditions": ["alphanumeric"],
+    "db": {
+        "type": "char",
+        "length": 16
+    }
+}

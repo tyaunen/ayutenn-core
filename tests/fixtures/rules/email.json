@@ -1,0 +1,5 @@
+{
+    "type": "string",
+    "max_length": 254,
+    "conditions": ["email"]
+}

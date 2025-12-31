@@ -1,0 +1,5 @@
+{
+    "type": "string",
+    "max_length": 7,
+    "conditions": ["color_code"]
+}

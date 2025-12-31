@@ -51,6 +51,7 @@ Options:
   --password=<password> DBパスワード（省略時: 空文字）
   --tables=<dir>        テーブル定義JSONディレクトリ（必須）
   --output=<dir>        SQL出力ディレクトリ（必須）
+  --rules=<dir>         ルールファイルディレクトリ（formatキー使用時に必須）
   --preview             プレビューのみ（ファイル出力しない）
   --drop-unknown        定義にないテーブルを削除対象に含める
   --help                このヘルプを表示
@@ -58,6 +59,9 @@ Options:
 Examples:
   # 設定ファイルを使用（推奨）
   php bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations
+
+  # ルールファイルを使用
+  php bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations --rules=./rules
 
   # DSN直接指定
   php bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --tables=./tables --output=./migrations
@@ -103,6 +107,7 @@ $options = getopt('', [
     'password:',
     'tables:',
     'output:',
+    'rules:',
     'preview',
     'drop-unknown',
     'help',
@@ -125,6 +130,7 @@ if (!isset($options['output'])) {
 
 $tablesDir = $options['tables'];
 $outputDir = $options['output'];
+$rulesDir = $options['rules'] ?? null;
 $isPreview = isset($options['preview']);
 $dropUnknown = isset($options['drop-unknown']);
 
@@ -148,6 +154,14 @@ if (isset($options['config'])) {
         Config::loadFromJson($configPath);
         $pdo = DbConnector::connectWithPdo();
         showInfo("Config loaded from: {$configPath}");
+
+        // 設定ファイルからMODEL_DIRECTORYを取得（CLIオプションが未指定の場合）
+        if ($rulesDir === null) {
+            $rulesDir = Config::get('MODEL_DIRECTORY');
+            if ($rulesDir !== null) {
+                showInfo("Rules directory from config: {$rulesDir}");
+            }
+        }
     } catch (\Exception $e) {
         exitWithError("Failed to connect using config: " . $e->getMessage());
     }
@@ -171,7 +185,7 @@ if (isset($options['config'])) {
 
 // マイグレーション実行
 try {
-    $manager = new MigrationManager($pdo, $tablesDir, $outputDir);
+    $manager = new MigrationManager($pdo, $tablesDir, $outputDir, $rulesDir);
 
     if ($isPreview) {
         // プレビューモード

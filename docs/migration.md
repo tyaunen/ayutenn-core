@@ -152,6 +152,72 @@ mysql -u user -p database < migrations/20241214_101154_migration.sql
 | `autoIncrement` | boolean | `false` | 自動採番（数値型のみ） |
 | `after` | string | なし | 配置位置（ALTER時用） |
 | `onUpdate` | string | なし | ON UPDATE句 |
+| `format` | string | なし | バリデーションルールファイル名 |
+
+#### バリデーションルールファイルとの連携（format）
+
+`format` キーを使用すると、バリデーションルールファイルから `type` と `length` を自動導出できます。
+これにより、テーブル定義とバリデーションルールの齟齬を防ぐことができます。
+
+```json
+"columns": {
+  "user_id": {
+    "format": "user_id",
+    "nullable": false,
+    "comment": "ユーザーID"
+  },
+  "user_name": {
+    "format": "username",
+    "nullable": false,
+    "comment": "ユーザー名"
+  }
+}
+```
+
+**ルールファイルの形式（dbセクション付き）:**
+
+```json
+// rules/user_id.json
+{
+    "type": "string",
+    "min_length": 16,
+    "max_length": 16,
+    "conditions": ["alphanumeric"],
+    "db": {
+        "type": "char",
+        "length": 16
+    }
+}
+```
+
+| dbセクション属性 | 説明 |
+|---------------|------|
+| `type` | DBカラム型（varchar, char, int等） |
+| `length` | カラム長（省略時はmax_lengthから導出） |
+| `unsigned` | 符号なし |
+| `precision` | DECIMALの精度 |
+| `scale` | DECIMALのスケール |
+
+**自動型推論ルール:**
+
+`db` セクションがない場合、以下のルールで自動推論されます。
+
+| バリデーションルール | DBカラム型 |
+|------------------|-----------|
+| `type: "string"` + `max_length ≤ 255` | `VARCHAR(max_length)` |
+| `type: "string"` + `max_length ≤ 65535` | `TEXT` |
+| `type: "string"` + `max_length > 65535` | `LONGTEXT` |
+| `type: "int"` | `INT` |
+| `type: "number"` | `DECIMAL(10,2)` |
+| `type: "boolean"` | `BOOLEAN` |
+| condition `email` | `VARCHAR(254)` |
+| condition `url` | `TEXT` |
+| condition `color_code` | `CHAR(7)` |
+| condition `datetime` | `DATETIME` |
+| condition `date` | `DATE` |
+
+> [!IMPORTANT]
+> `format` キーを使用する場合は、CLIの `--rules` オプションまたは設定ファイルの `MODEL_DIRECTORY` でルールディレクトリを指定する必要があります。
 
 #### カラム定義例
 
@@ -332,15 +398,23 @@ php bin/migrate.php [options]
 | `--password=<password>` | DBパスワード（省略時: 空文字） |
 | `--tables=<dir>` | テーブル定義JSONディレクトリ（必須） |
 | `--output=<dir>` | SQL出力ディレクトリ（必須） |
+| `--rules=<dir>` | ルールファイルディレクトリ（`format`キー使用時に必須） |
 | `--preview` | プレビューのみ（ファイル出力しない） |
 | `--drop-unknown` | 定義にないテーブルを削除対象に含める |
 | `--help` | ヘルプを表示 |
+
+> [!NOTE]
+> 設定ファイルに `MODEL_DIRECTORY` が定義されている場合、`--rules` オプションを省略できます。
+> `--rules` オプションが指定された場合はそちらが優先されます。
 
 ### 使用例
 
 ```bash
 # 設定ファイルを使用（推奨）
 php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations
+
+# ルールファイルを使用（formatキーを使う場合）
+php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations --rules=./rules
 
 # プレビューのみ
 php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations --preview
@@ -362,8 +436,9 @@ php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output
 // コンストラクタ
 $manager = new MigrationManager(
     PDO $pdo,
-    string $definitionsDir,  // テーブル定義JSONディレクトリ
-    string $outputDir        // SQL出力ディレクトリ
+    string $definitionsDir,       // テーブル定義JSONディレクトリ
+    string $outputDir,            // SQL出力ディレクトリ
+    ?string $rulesDirectory = null // ルールファイルディレクトリ（format使用時に指定）
 );
 
 // マイグレーションSQLを生成してファイルに出力

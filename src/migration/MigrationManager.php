@@ -29,13 +29,18 @@ class MigrationManager
      * @param PDO $pdo PDO接続
      * @param string $definitionsDir テーブル定義JSONディレクトリ
      * @param string $outputDir SQL出力ディレクトリ
+     * @param string|null $rulesDirectory ルールファイルディレクトリ（formatキー使用時に必須）
      */
-    public function __construct(PDO $pdo, string $definitionsDir, string $outputDir)
-    {
+    public function __construct(
+        PDO $pdo,
+        string $definitionsDir,
+        string $outputDir,
+        ?string $rulesDirectory = null
+    ) {
         $this->pdo = $pdo;
         $this->definitionsDir = $definitionsDir;
         $this->outputDir = $outputDir;
-        $this->loader = new TableDefinitionLoader();
+        $this->loader = new TableDefinitionLoader($rulesDirectory);
         $this->inspector = new DatabaseInspector($pdo);
         $this->differ = new SchemaDiffer();
         $this->generator = new DDLGenerator();
