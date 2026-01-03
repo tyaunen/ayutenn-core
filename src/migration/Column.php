@@ -57,9 +57,6 @@ class Column
         if (isset($definition['unsigned'])) {
             $column->unsigned = (bool)$definition['unsigned'];
         }
-        if (isset($definition['nullable'])) {
-            $column->nullable = (bool)$definition['nullable'];
-        }
         if (isset($definition['autoIncrement'])) {
             $column->autoIncrement = (bool)$definition['autoIncrement'];
         }
@@ -67,6 +64,16 @@ class Column
             $column->default = $definition['default'];
             $column->hasDefault = true;
         }
+
+        // nullableの設定
+        // MySQLではDEFAULT指定時に明示的にNOT NULLを指定しない限りNULLが許可されるため、
+        // defaultが設定されていてnullableが明示されていない場合はtrueをデフォルトにする
+        if (isset($definition['nullable'])) {
+            $column->nullable = (bool)$definition['nullable'];
+        } else if ($column->hasDefault && !$column->autoIncrement) {
+            $column->nullable = true;
+        }
+
         if (isset($definition['comment'])) {
             $column->comment = $definition['comment'];
         }

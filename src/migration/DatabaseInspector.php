@@ -67,19 +67,86 @@ class DatabaseInspector
             return null;
         }
 
+        $columns = $this->getColumns($tableName);
+        $indexes = $this->getIndexes($tableName);
+
+        // 暗黙的ユニークインデックス（uk_{column_name}パターン）を検出し、
+        // カラムのunique属性に変換してindexesから除外
+        $implicitUniqueIndexes = $this->detectImplicitUniqueIndexes($columns, $indexes);
+
+        foreach ($implicitUniqueIndexes as $columnName) {
+            if (isset($columns[$columnName])) {
+                $columns[$columnName]['unique'] = true;
+            }
+        }
+
+        // 暗黙的インデックスを除外
+        foreach ($implicitUniqueIndexes as $columnName) {
+            $implicitIndexName = 'uk_' . $columnName;
+            unset($indexes[$implicitIndexName]);
+        }
+
         $definition = [
             'name' => $tableName,
             'engine' => $tableInfo['ENGINE'],
             'charset' => $this->extractCharset($tableInfo['TABLE_COLLATION']),
             'collation' => $tableInfo['TABLE_COLLATION'],
             'comment' => $tableInfo['TABLE_COMMENT'] ?: null,
-            'columns' => $this->getColumns($tableName),
+            'columns' => $columns,
             'primaryKey' => $this->getPrimaryKey($tableName),
-            'indexes' => $this->getIndexes($tableName),
+            'indexes' => $indexes,
             'foreignKeys' => $this->getForeignKeys($tableName),
         ];
 
         return TableDefinition::fromArray($definition);
+    }
+
+    /**
+     * 暗黙的ユニークインデックスを検出
+     *
+     * uk_{column_name}パターンのインデックスで、単一カラムのユニークインデックスを
+     * カラムのunique属性として認識する
+     *
+     * @param array $columns カラム情報
+     * @param array $indexes インデックス情報
+     * @return string[] 暗黙的ユニークインデックスに対応するカラム名の配列
+     */
+    private function detectImplicitUniqueIndexes(array $columns, array $indexes): array
+    {
+        $implicitColumns = [];
+
+        foreach ($indexes as $indexName => $indexDef) {
+            // uk_{column_name}パターンをチェック
+            if (!str_starts_with($indexName, 'uk_')) {
+                continue;
+            }
+
+            // ユニークインデックスであることを確認
+            if (!$indexDef['unique']) {
+                continue;
+            }
+
+            // 単一カラムのインデックスであることを確認
+            if (count($indexDef['columns']) !== 1) {
+                continue;
+            }
+
+            $columnName = $indexDef['columns'][0];
+
+            // インデックス名がuk_{column_name}と一致することを確認
+            if ($indexName !== 'uk_' . $columnName) {
+                continue;
+            }
+
+            // 対応するカラムが存在することを確認
+            if (!isset($columns[$columnName])) {
+                continue;
+            }
+
+            $implicitColumns[] = $columnName;
+        }
+
+        return $implicitColumns;
     }
 
     /**
@@ -161,8 +228,12 @@ class DatabaseInspector
         }
 
         // デフォルト値
+        // DEFAULT NULLは暗黙的なデフォルトのため、明示的なデフォルトとしては扱わない
         if ($row['COLUMN_DEFAULT'] !== null) {
-            $column['default'] = $row['COLUMN_DEFAULT'];
+            $normalizedDefault = $this->normalizeDefaultValue($row['COLUMN_DEFAULT'], $type);
+            if ($normalizedDefault !== null) {
+                $column['default'] = $normalizedDefault;
+            }
         }
 
         // ON UPDATE
@@ -178,6 +249,67 @@ class DatabaseInspector
         }
 
         return $column;
+    }
+
+    /**
+     * デフォルト値を正規化
+     *
+     * DBから取得したデフォルト値をJSON定義と比較可能な形式に変換する
+     *
+     * @param mixed $value DBから取得したデフォルト値
+     * @param string $type カラムの型
+     * @return mixed 正規化されたデフォルト値（nullを返した場合はデフォルト値なしとして扱われる）
+     */
+    private function normalizeDefaultValue(mixed $value, string $type): mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        // 文字列"NULL"は暗黙的なデフォルト値のため、明示的なデフォルトとしては扱わない
+        $upperValue = strtoupper((string)$value);
+        if ($upperValue === 'NULL') {
+            return null;
+        }
+
+        // CURRENT_TIMESTAMP系の正規化
+        if (in_array($upperValue, ['CURRENT_TIMESTAMP', 'CURRENT_TIMESTAMP()', 'NOW()'])) {
+            return 'CURRENT_TIMESTAMP';
+        }
+
+        // 数値型の場合、文字列を適切な型に変換
+        if (in_array($type, ['int', 'bigint', 'tinyint'])) {
+            if (is_numeric($value)) {
+                return (int)$value;
+            }
+        }
+
+        if ($type === 'decimal') {
+            if (is_numeric($value)) {
+                return (float)$value;
+            }
+        }
+
+        // boolean型（tinyint(1)）の場合
+        if ($type === 'boolean' || $type === 'tinyint') {
+            if ($value === '1' || $value === 1) {
+                return true;
+            }
+            if ($value === '0' || $value === 0) {
+                return (int)$value;  // 0は数値として保持
+            }
+        }
+
+        // 文字列型の場合、周囲のクォートを除去
+        if (in_array($type, ['varchar', 'char', 'text', 'longtext', 'enum'])) {
+            $stringValue = (string)$value;
+            // シングルクォートで囲まれている場合は除去
+            if (preg_match("/^'(.*)'$/", $stringValue, $matches)) {
+                return $matches[1];
+            }
+        }
+
+        return $value;
     }
 
     /**
