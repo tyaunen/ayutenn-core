@@ -212,7 +212,9 @@ class DatabaseInspector
         }
 
         // 長さ (varchar, char)
-        if ($row['CHARACTER_MAXIMUM_LENGTH'] !== null) {
+        // TEXT系・BLOB系の型は長さを持たないため除外
+        $typesWithoutLength = ['text', 'tinytext', 'mediumtext', 'longtext', 'blob', 'tinyblob', 'mediumblob', 'longblob'];
+        if ($row['CHARACTER_MAXIMUM_LENGTH'] !== null && !in_array($type, $typesWithoutLength)) {
             $column['length'] = (int)$row['CHARACTER_MAXIMUM_LENGTH'];
         }
 
@@ -239,7 +241,12 @@ class DatabaseInspector
         // ON UPDATE
         if (str_contains($row['EXTRA'], 'on update')) {
             if (preg_match('/on update (\S+)/i', $row['EXTRA'], $matches)) {
-                $column['onUpdate'] = strtoupper($matches[1]);
+                $onUpdateValue = strtoupper($matches[1]);
+                // CURRENT_TIMESTAMP()をCURRENT_TIMESTAMPに正規化
+                if ($onUpdateValue === 'CURRENT_TIMESTAMP()') {
+                    $onUpdateValue = 'CURRENT_TIMESTAMP';
+                }
+                $column['onUpdate'] = $onUpdateValue;
             }
         }
 
