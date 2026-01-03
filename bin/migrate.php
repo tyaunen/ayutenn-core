@@ -3,7 +3,6 @@
  * マイグレーションCLIツール
  *
  * 使用方法:
- *   php bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations
  *   php bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --tables=./tables --output=./migrations
  */
 
@@ -30,8 +29,6 @@ if (!$autoloaded) {
     exit(1);
 }
 
-use ayutenn\core\config\Config;
-use ayutenn\core\database\DbConnector;
 use ayutenn\core\migration\MigrationManager;
 use PDO;
 
@@ -45,9 +42,8 @@ Usage:
   php bin/migrate.php [options]
 
 Options:
-  --config=<path>       設定ファイルパス（PDO_DSN, PDO_USERNAME, PDO_PASSWORDを含む）
-  --dsn=<dsn>           PDO DSN（--configがない場合は必須）
-  --user=<user>         DBユーザー名（--configがない場合は必須）
+  --dsn=<dsn>           PDO DSN（必須）
+  --user=<user>         DBユーザー名（必須）
   --password=<password> DBパスワード（省略時: 空文字）
   --tables=<dir>        テーブル定義JSONディレクトリ（必須）
   --output=<dir>        SQL出力ディレクトリ（必須）
@@ -57,17 +53,14 @@ Options:
   --help                このヘルプを表示
 
 Examples:
-  # 設定ファイルを使用（推奨）
-  php bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations
+  # 基本的な使用方法
+  php bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./tables --output=./migrations
 
-  # ルールファイルを使用
-  php bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations --rules=./rules
-
-  # DSN直接指定
-  php bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --tables=./tables --output=./migrations
+  # ルールファイルを使用（formatキー使用時）
+  php bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./tables --output=./migrations --rules=./rules
 
   # プレビューのみ
-  php bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations --preview
+  php bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./tables --output=./migrations --preview
 
 HELP;
     echo $help;
@@ -101,7 +94,6 @@ function showInfo(string $message): void
 
 // コマンドライン引数をパース
 $options = getopt('', [
-    'config:',
     'dsn:',
     'user:',
     'password:',
@@ -120,6 +112,14 @@ if (isset($options['help'])) {
 }
 
 // 必須引数のチェック
+if (!isset($options['dsn'])) {
+    exitWithError('--dsn is required.');
+}
+
+if (!isset($options['user'])) {
+    exitWithError('--user is required.');
+}
+
 if (!isset($options['tables'])) {
     exitWithError('--tables is required.');
 }
@@ -128,6 +128,9 @@ if (!isset($options['output'])) {
     exitWithError('--output is required.');
 }
 
+$dsn = $options['dsn'];
+$user = $options['user'];
+$password = $options['password'] ?? '';
 $tablesDir = $options['tables'];
 $outputDir = $options['output'];
 $rulesDir = $options['rules'] ?? null;
@@ -140,47 +143,13 @@ if (!is_dir($tablesDir)) {
 }
 
 // PDO接続を取得
-$pdo = null;
-
-if (isset($options['config'])) {
-    // 設定ファイルから読み込み
-    $configPath = $options['config'];
-
-    if (!file_exists($configPath)) {
-        exitWithError("Config file not found: {$configPath}");
-    }
-
-    try {
-        Config::loadFromJson($configPath);
-        $pdo = DbConnector::connectWithPdo();
-        showInfo("Config loaded from: {$configPath}");
-
-        // 設定ファイルからMODEL_DIRECTORYを取得（CLIオプションが未指定の場合）
-        if ($rulesDir === null) {
-            $rulesDir = Config::get('MODEL_DIRECTORY');
-            if ($rulesDir !== null) {
-                showInfo("Rules directory from config: {$rulesDir}");
-            }
-        }
-    } catch (\Exception $e) {
-        exitWithError("Failed to connect using config: " . $e->getMessage());
-    }
-} elseif (isset($options['dsn']) && isset($options['user'])) {
-    // DSN直接指定
-    $dsn = $options['dsn'];
-    $user = $options['user'];
-    $password = $options['password'] ?? '';
-
-    try {
-        $pdo = new PDO($dsn, $user, $password);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-        showInfo("Connected to: {$dsn}");
-    } catch (\PDOException $e) {
-        exitWithError("Failed to connect: " . $e->getMessage());
-    }
-} else {
-    exitWithError('Either --config or both --dsn and --user are required.');
+try {
+    $pdo = new PDO($dsn, $user, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+    showInfo("Connected to: {$dsn}");
+} catch (\PDOException $e) {
+    exitWithError("Failed to connect: " . $e->getMessage());
 }
 
 // マイグレーション実行

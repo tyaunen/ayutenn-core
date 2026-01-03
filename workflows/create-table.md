@@ -42,17 +42,17 @@ description: データベーステーブルを宣言・作成する
 ### 2. マイグレーションSQLを生成
 
 ```bash
-php vendor/bin/migrate.php --config=./config/config.json --tables=./tables --output=./migrations
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl
 ```
 
 プレビューのみの場合:
 ```bash
-php vendor/bin/migrate.php --config=./config/config.json --tables=./tables --output=./migrations --preview
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl --preview
 ```
 
 ルールファイルを使用する場合（format機能）:
 ```bash
-php vendor/bin/migrate.php --config=./config/config.json --tables=./tables --output=./migrations --rules=./models
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl --rules=./app/model
 ```
 
 ### 3. SQLを実行

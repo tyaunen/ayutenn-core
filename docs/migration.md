@@ -45,14 +45,14 @@
 #### CLI（推奨）
 
 ```bash
-# 設定ファイルを使用
-php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations
+# 基本的な使用方法
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl
 
 # プレビュー（ファイル出力なし）
-php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations --preview
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl --preview
 
-# DSN直接指定
-php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --tables=./tables --output=./migrations
+# ルールファイル使用（formatキー使用時）
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl --rules=./app/model
 ```
 
 #### PHPコードから
@@ -392,9 +392,8 @@ php bin/migrate.php [options]
 
 | オプション | 説明 |
 |---|---|
-| `--config=<path>` | 設定ファイルパス（`PDO_DSN`, `PDO_USERNAME`, `PDO_PASSWORD`を含む） |
-| `--dsn=<dsn>` | PDO DSN（`--config`がない場合は必須） |
-| `--user=<user>` | DBユーザー名（`--config`がない場合は必須） |
+| `--dsn=<dsn>` | PDO DSN（必須） |
+| `--user=<user>` | DBユーザー名（必須） |
 | `--password=<password>` | DBパスワード（省略時: 空文字） |
 | `--tables=<dir>` | テーブル定義JSONディレクトリ（必須） |
 | `--output=<dir>` | SQL出力ディレクトリ（必須） |
@@ -403,27 +402,20 @@ php bin/migrate.php [options]
 | `--drop-unknown` | 定義にないテーブルを削除対象に含める |
 | `--help` | ヘルプを表示 |
 
-> [!NOTE]
-> 設定ファイルに `MODEL_DIRECTORY` が定義されている場合、`--rules` オプションを省略できます。
-> `--rules` オプションが指定された場合はそちらが優先されます。
-
 ### 使用例
 
 ```bash
-# 設定ファイルを使用（推奨）
-php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations
+# 基本的な使用方法
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl
 
 # ルールファイルを使用（formatキーを使う場合）
-php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations --rules=./rules
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl --rules=./app/model
 
 # プレビューのみ
-php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations --preview
-
-# DSN直接指定
-php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --tables=./tables --output=./migrations
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl --preview
 
 # 定義にないテーブルを削除対象に含める
-php vendor/bin/migrate.php --config=./config/env.json --tables=./tables --output=./migrations --drop-unknown
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl --drop-unknown
 ```
 
 ---

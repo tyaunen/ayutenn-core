@@ -70,14 +70,17 @@ composer require tyaunen/ayutenn-core:dev-main
 コマンドラインからマイグレーションを実行できます：
 
 ```bash
-# 設定ファイルを使用
-php vendor/bin/migrate.php --config=path/to/env.json --tables=path/to/tables/
+# 基本的な使用方法
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl
 
 # プレビューモード（SQLを表示するだけで実行しない）
-php vendor/bin/migrate.php --config=path/to/env.json --tables=path/to/tables/ --preview
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl --preview
+
+# ルールファイルを使用（formatキー使用時）
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl --rules=./app/model
 
 # 不要なテーブルを削除
-php vendor/bin/migrate.php --config=path/to/env.json --tables=path/to/tables/ --drop-unknown
+php vendor/bin/migrate.php --dsn="mysql:host=localhost;dbname=mydb" --user=root --password=secret --tables=./migrations/define --output=./migrations/ddl --drop-unknown
 ```
 
 詳細は [docs/migration.md](docs/migration.md) を参照してください。
