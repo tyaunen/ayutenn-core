@@ -65,13 +65,9 @@ class Column
             $column->hasDefault = true;
         }
 
-        // nullableの設定
-        // MySQLではDEFAULT指定時に明示的にNOT NULLを指定しない限りNULLが許可されるため、
-        // defaultが設定されていてnullableが明示されていない場合はtrueをデフォルトにする
+        // nullableの設定（明示された場合のみtrue）
         if (isset($definition['nullable'])) {
             $column->nullable = (bool)$definition['nullable'];
-        } else if ($column->hasDefault && !$column->autoIncrement) {
-            $column->nullable = true;
         }
 
         if (isset($definition['comment'])) {
@@ -151,11 +147,21 @@ class Column
             'int' => 'INT',
             'bigint' => 'BIGINT',
             'tinyint' => 'TINYINT',
+            'smallint' => 'SMALLINT',
+            'mediumint' => 'MEDIUMINT',
+            'float' => 'FLOAT',
+            'double' => 'DOUBLE',
             'decimal' => sprintf('DECIMAL(%d,%d)', $this->precision ?? 10, $this->scale ?? 0),
             'varchar' => sprintf('VARCHAR(%d)', $this->length ?? 255),
             'char' => sprintf('CHAR(%d)', $this->length ?? 1),
             'text' => 'TEXT',
+            'tinytext' => 'TINYTEXT',
+            'mediumtext' => 'MEDIUMTEXT',
             'longtext' => 'LONGTEXT',
+            'blob' => 'BLOB',
+            'tinyblob' => 'TINYBLOB',
+            'mediumblob' => 'MEDIUMBLOB',
+            'longblob' => 'LONGBLOB',
             'datetime' => 'DATETIME',
             'timestamp' => 'TIMESTAMP',
             'date' => 'DATE',
@@ -172,7 +178,10 @@ class Column
      */
     private function isNumericType(): bool
     {
-        return in_array($this->type, ['int', 'bigint', 'tinyint', 'decimal']);
+        return in_array($this->type, [
+            'int', 'bigint', 'tinyint', 'smallint', 'mediumint',
+            'decimal', 'float', 'double'
+        ]);
     }
 
     /**

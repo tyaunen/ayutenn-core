@@ -177,4 +177,126 @@ class ColumnTest extends TestCase
         $this->assertFalse($array['nullable']);
         $this->assertTrue($array['unique']);
     }
+
+    public function test_デフォルト値があってもnullableを明示しなければNOT_NULLになる(): void
+    {
+        $column = Column::fromArray('count', [
+            'type' => 'int',
+            'default' => 0,
+        ]);
+
+        $sql = $column->toSQL();
+
+        $this->assertStringContainsString('NOT NULL', $sql);
+        $this->assertStringContainsString('DEFAULT 0', $sql);
+    }
+
+    public function test_デフォルト値があり_nullable_trueを明示すればNULLになる(): void
+    {
+        $column = Column::fromArray('count', [
+            'type' => 'int',
+            'default' => 0,
+            'nullable' => true,
+        ]);
+
+        $sql = $column->toSQL();
+
+        $this->assertStringContainsString('NULL', $sql);
+        $this->assertStringNotContainsString('NOT NULL', $sql);
+        $this->assertStringContainsString('DEFAULT 0', $sql);
+    }
+
+    public function test_MEDIUMTEXT型が正しく出力される(): void
+    {
+        $column = Column::fromArray('content', [
+            'type' => 'mediumtext',
+        ]);
+
+        $sql = $column->toSQL();
+
+        $this->assertStringContainsString('MEDIUMTEXT', $sql);
+    }
+
+    public function test_TINYTEXT型が正しく出力される(): void
+    {
+        $column = Column::fromArray('summary', [
+            'type' => 'tinytext',
+        ]);
+
+        $sql = $column->toSQL();
+
+        $this->assertStringContainsString('TINYTEXT', $sql);
+    }
+
+    public function test_SMALLINT型にUNSIGNEDが適用される(): void
+    {
+        $column = Column::fromArray('priority', [
+            'type' => 'smallint',
+            'unsigned' => true,
+        ]);
+
+        $sql = $column->toSQL();
+
+        $this->assertStringContainsString('SMALLINT', $sql);
+        $this->assertStringContainsString('UNSIGNED', $sql);
+    }
+
+    public function test_MEDIUMINT型にUNSIGNEDが適用される(): void
+    {
+        $column = Column::fromArray('views', [
+            'type' => 'mediumint',
+            'unsigned' => true,
+        ]);
+
+        $sql = $column->toSQL();
+
+        $this->assertStringContainsString('MEDIUMINT', $sql);
+        $this->assertStringContainsString('UNSIGNED', $sql);
+    }
+
+    public function test_FLOAT型が正しく出力される(): void
+    {
+        $column = Column::fromArray('rate', [
+            'type' => 'float',
+        ]);
+
+        $sql = $column->toSQL();
+
+        $this->assertStringContainsString('FLOAT', $sql);
+    }
+
+    public function test_DOUBLE型にUNSIGNEDが適用される(): void
+    {
+        $column = Column::fromArray('latitude', [
+            'type' => 'double',
+            'unsigned' => true,
+        ]);
+
+        $sql = $column->toSQL();
+
+        $this->assertStringContainsString('DOUBLE', $sql);
+        $this->assertStringContainsString('UNSIGNED', $sql);
+    }
+
+    public function test_BLOB型が正しく出力される(): void
+    {
+        $column = Column::fromArray('binary_data', [
+            'type' => 'blob',
+        ]);
+
+        $sql = $column->toSQL();
+
+        $this->assertStringContainsString('BLOB', $sql);
+    }
+
+    public function test_MEDIUMBLOB型が正しく出力される(): void
+    {
+        $column = Column::fromArray('image', [
+            'type' => 'mediumblob',
+        ]);
+
+        $sql = $column->toSQL();
+
+        $this->assertStringContainsString('MEDIUMBLOB', $sql);
+    }
 }
